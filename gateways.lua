@@ -17,15 +17,15 @@ diatonic_scale[4] = 7
 diatonic_scale[5] = 9
 diatonic_scale[6] = 11
 
-one_value_is_in_the_scale = {}
-the_other_value_is_in_the_scale = {}
-both_values_are_in_the_scale = {}
+scales_containing_both_values = {}
+one_note_is_there = {}
+the_other_note_is_there = {}
 
 for i = 0,11 do
-  one_value_is_in_the_scale[i] = 0
-  the_other_value_is_in_the_scale[i] = 0
-  both_values_are_in_the_scale[i] = 0
+  one_note_is_there[i] = 0
+  the_other_note_is_there[i] = 0
 end
+
 
 current_pitch_collection = {}
 
@@ -59,18 +59,27 @@ note_names[11] = "B"
 function key(n,z)
   if n == 3 and z == 1 then
     generate_a_pitch_collection()
-    find_an_interval()
   end
 end
 
 function find_an_interval()
+  
+for i = 0, 11 do
+  one_note_is_there[i] = 0
+  the_other_note_is_there[i] = 0
+end
+
+for k in pairs (scales_containing_both_values) do
+    scales_containing_both_values[k] = nil
+end
   
   one_note = current_pitch_collection[math.random(0,6)]
   a_different_note = current_pitch_collection[math.random(0,6)]
   
   while(one_note >= a_different_note) do
     
-      find_an_interval()
+      one_note = current_pitch_collection[math.random(0,6)]
+      a_different_note = current_pitch_collection[math.random(0,6)]
   
   end
   
@@ -81,53 +90,46 @@ function find_an_interval()
       
   end
   
-  
 end
 
 function generate_a_pitch_collection()
-  
-for i = 0,11 do
-  one_value_is_in_the_scale[i] = 0
-  the_other_value_is_in_the_scale[i] = 0
-  both_values_are_in_the_scale[i] = 0
-end
 
 for i = 0,11 do
   for j = 0,6 do
   if one_note == rooted_scales[i][j] then
-    one_value_is_in_the_scale[i] = 1
+    one_note_is_there[i] = 1
   end
   if a_different_note == rooted_scales[i][j] then
-    the_other_value_is_in_the_scale[i] = 1
+    the_other_note_is_there[i] = 1
   end
   end
-
-if the_other_value_is_in_the_scale[i] and one_value_is_in_the_scale[i] then
-  both_values_are_in_the_scale[i] = 1
-end
-end
-
-guess_where_we_are_going = math.random(0,11)
-
-while both_values_are_in_the_scale[guess_where_we_are_going] == 0 do
-  generate_a_pitch_collection()
-end
-
-if both_values_are_in_the_scale[guess_where_we_are_going] == 1 then
-      
-      for i = 0,6 do
-      
-        current_pitch_collection[i] = rooted_scales[new_root][i]
-        tab.print(current_pitch_collection)
-        
+  
+  if one_note_is_there[i] == 1 then
+    if the_other_note_is_there[i] == 1 then
+      if i ~= new_root then
+        table.insert(scales_containing_both_values, i)
       end
-
     end
-    
+  
+  end
+  end
+
+  tab.print(one_note_is_there)
+
+new_root = scales_containing_both_values[(math.random(tablelength(scales_containing_both_values)))]
+
+      for i = 0,6 do
+        current_pitch_collection[i] =
+
+rooted_scales[new_root][i]
+
+end
+
+    find_an_interval()
     redraw()
+end
 
     
-end
 
 
 function redraw()
@@ -196,8 +198,10 @@ function redraw()
   
   screen.font_size(22)
   screen.move(32, 62)
+  screen.text(note_names[new_root])
+  screen.move(72, 62)
   screen.text(note_names[one_note])
-  screen.move(52, 62)
+  screen.move(92, 62)
   screen.text(note_names[a_different_note])
   
     screen.stroke()
@@ -220,3 +224,9 @@ white_keys[5] = 60.9975
 white_keys[7] = 79.2825
 white_keys[9] = 97.5675
 white_keys[11] = 115.8525
+
+function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
