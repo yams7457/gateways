@@ -1,232 +1,301 @@
 function init()
-  screen.font_face(38)
-  distance = 0
-  find_an_interval()
-end
-
-old_root = 0
-new_root = 0
-guess_where_we_are_going = 0
-
-diatonic_scale = {}
-diatonic_scale[0] = 0
-diatonic_scale[1] = 2
-diatonic_scale[2] = 4
-diatonic_scale[3] = 5
-diatonic_scale[4] = 7
-diatonic_scale[5] = 9
-diatonic_scale[6] = 11
-
-scales_containing_both_values = {}
-one_note_is_there = {}
-the_other_note_is_there = {}
-
-for i = 0,11 do
-  one_note_is_there[i] = 0
-  the_other_note_is_there[i] = 0
-end
-
-
-current_pitch_collection = {}
-
-for i = 0,6 do 
-  current_pitch_collection[i] = diatonic_scale[i]
-end
-
-rooted_scales = {}
-for i = 0,11 do
-  rooted_scales[i] = {}
-  for j = 0,6 do
-    rooted_scales[i][j] = (diatonic_scale[j] + i) % 12
-  end
-end
-
-note_names = {}
-note_names[0] = "C"
-note_names[1] = "Db"
-note_names[2] = "D"
-note_names[3] = "Eb"
-note_names[4] = "E"
-note_names[5] = "F"
-note_names[6] = "Gb"
-note_names[7] = "G"
-note_names[8] = "Ab"
-note_names[9] = "A"
-note_names[10] = "Bb"
-note_names[11] = "B"
-
-
-function key(n,z)
-  if n == 3 and z == 1 then
-    generate_a_pitch_collection()
-  end
-end
-
-function find_an_interval()
-  
-for i = 0, 11 do
-  one_note_is_there[i] = 0
-  the_other_note_is_there[i] = 0
-end
-
-for k in pairs (scales_containing_both_values) do
-    scales_containing_both_values[k] = nil
-end
-  
-  one_note = current_pitch_collection[math.random(0,6)]
-  a_different_note = current_pitch_collection[math.random(0,6)]
-  
-  while(one_note >= a_different_note) do
-    
-      one_note = current_pitch_collection[math.random(0,6)]
-      a_different_note = current_pitch_collection[math.random(0,6)]
-  
-  end
-  
-  if one_note < a_different_note then
-    
-      distance = a_different_note - one_note
-      redraw()
-      
-  end
-  
-end
-
-function generate_a_pitch_collection()
-
-for i = 0,11 do
-  for j = 0,6 do
-  if one_note == rooted_scales[i][j] then
-    one_note_is_there[i] = 1
-  end
-  if a_different_note == rooted_scales[i][j] then
-    the_other_note_is_there[i] = 1
-  end
-  end
-  
-  if one_note_is_there[i] == 1 then
-    if the_other_note_is_there[i] == 1 then
-      if i ~= new_root then
-        table.insert(scales_containing_both_values, i)
-      end
-    end
-  
-  end
-  end
-
-  tab.print(one_note_is_there)
-
-new_root = scales_containing_both_values[(math.random(tablelength(scales_containing_both_values)))]
-
-      for i = 0,6 do
-        current_pitch_collection[i] =
-
-rooted_scales[new_root][i]
-
-end
-
-    find_an_interval()
+    pick_a_gateway()
+    lock_chevrons()
+    find_the_next_root()
     redraw()
 end
 
-    
+diatonic_template = {2,4,5,7,9,11}
+diatonic_template[0] = 0
 
+note_names = {"Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"} 
+note_names[0] = "C"
+
+diatonic_scales = {}
+current_pitch_collection = {}
+next_pitch_collection = {}
+chevron_one = {}
+chevron_two = {}
+chevrons_locked = {}
+
+for i = 0,11 do
+  diatonic_scales[i] = {}
+  chevron_one[i] = 0
+  chevron_two[i] = 0
+  for j = 0,6 do
+    diatonic_scales[i][j] = (i + diatonic_template[j]) % 12
+  end
+end
+
+current_root = math.random(0,11)
+
+for i = 0,6 do
+  current_pitch_collection[i] = diatonic_scales[current_root][i]
+end
+
+function key(n,z)
+  if n == 3 and z == 1 then
+    replace_the_root()
+    pick_a_gateway()
+    lock_chevrons()
+    find_the_next_root()
+    redraw()
+    print(current_root, half_of_gateway, other_half_of_gateway, next_root)
+  end
+end
+
+function replace_the_root()
+  for i = 0,6 do
+    current_pitch_collection[i] = diatonic_scales[next_root][i]
+  end
+  
+  current_root = next_root
+  
+end
+
+function pick_a_gateway()
+  half_of_gateway = current_pitch_collection[math.random(0,6)]
+  other_half_of_gateway = current_pitch_collection[math.random(0,6)]
+  
+  if half_of_gateway == other_half_of_gateway then
+    pick_a_gateway()
+  end
+  
+  if half_of_gateway > other_half_of_gateway then
+    distance = half_of_gateway - other_half_of_gateway
+    if distance > 6 then
+      distance = 12 - distance
+    end
+  end
+  
+  if other_half_of_gateway > half_of_gateway then
+    distance = other_half_of_gateway - half_of_gateway
+    if distance > 6 then
+      distance = 12 - distance
+    end
+  end
+  
+end
+
+function lock_chevrons()
+  
+  for i = 0,11 do
+    chevron_one[i] = 0
+    chevron_two[i] = 0
+    chevrons_locked[i] = 0
+  end
+  
+  for i = 0,11 do
+    for j = 0,6 do
+      if half_of_gateway == diatonic_scales[i][j] then
+        chevron_one[i] = 1
+      end
+      if other_half_of_gateway == diatonic_scales[i][j] then
+        chevron_two[i] = 1
+      end
+    end
+    
+    if chevron_one[i] == 1 and chevron_two[i] == 1 then
+      chevrons_locked[i] = 1
+    end
+
+  end
+  
+
+end
+
+function find_the_next_root()
+  next_root = math.random(0,11)
+  if chevrons_locked[next_root] == 0 or next_root == current_root then
+    find_the_next_root()
+  elseif chevrons_locked[next_root] == 1 then
+    
+    for i = 0,6 do
+      next_pitch_collection[i] = diatonic_scales[next_root][i]
+    end
+    
+  end
+  
+  
+  
+end
+
+total_keyboard_width = 92
+total_keyboard_height = 28
+black_key_length = total_keyboard_height / 1.61803398875
+
+black_keys = {}
+black_keys[1] = 1.5 * .083 * total_keyboard_width - 3
+black_keys[3] = 3.5 * .083 * total_keyboard_width - 3
+black_keys[6] = 6.5 * .083 * total_keyboard_width - 3
+black_keys[8] = 8.5 * .083 * total_keyboard_width - 3
+black_keys[10] = 10.5 * .083 * total_keyboard_width - 3
+
+
+white_keys = {}
+white_keys[0] = 1 * .083 * total_keyboard_width - 5
+white_keys[2] = 2.5 * .083 * total_keyboard_width - 3
+white_keys[4] = 4.5 * .083 * total_keyboard_width - 4
+white_keys[5] = 5.5 * .083 * total_keyboard_width - 2
+white_keys[7] = 7.5 * .083 * total_keyboard_width - 3
+white_keys[9] = 9.5 * .083 * total_keyboard_width - 3
+white_keys[11] = 11.5 * .083 * total_keyboard_width - 3
 
 function redraw()
   screen.clear()
-    screen.aa(1)
-    screen.line_width(1)
-    screen.move(128,0)
-    screen.line(128,45)
-    screen.line(0,45)
-    screen.line(0,0)
-    for i = 1,7 do
-      screen.move(i * 18.285, 45)
-      screen.line(i * 18.285, 27)
-    if i == 3 then
-      screen.line(i * 18.285, 0)
-    end
-    end
-    for i = 1,6 do
-      if i ~= 3 then
-        if i == 1 then
-        screen.move (i * 12.19, 0)
-        screen.line(i * 12.19, 27)
-        screen.line(i * 12.19 + 12.19, 27)
-        screen.line(i * 12.19 + 12.19, 0)
-      elseif i == 2 then
-        screen.move (i * 12.19 + 6.095, 0)
-        screen.line(i * 12.19 + 6.095, 27)
-        screen.line(i * 12.19 + 12.19 + 6.05, 27)
-        screen.line(i * 12.19 + 12.19 + 6.095, 0)  
-        
-      elseif i == 4 then
-        screen.move (i * 12.19 + 12.19 + 6.095, 0)
-        screen.line(i * 12.19 + 12.19 + 6.095, 27)
-        screen.line(i * 12.19 + 12.19 + 12.19 + 6.095, 27)
-        screen.line(i * 12.19 + 12.19 + 12.19 + 6.095, 0)          
-      
-      elseif i == 5 then
-        screen.move (i * 12.19 + 12.19 + 12.19, 0)
-        screen.line(i * 12.19 + 12.19 + 12.19, 27)
-        screen.line(i * 12.19 + 12.19 + 12.19 + 12.19, 27)
-        screen.line(i * 12.19 + 12.19 + 12.19 + 12.19, 0)         
+  screen.aa(1)
+  screen.line_width(1)
+  screen.move(0,0)
+  
+  --black keys as a percentage of the whole keyboard: 0.083
 
-      elseif i == 6 then
-        screen.move (i * 12.19 + 12.19 + 12.19 + 6.095, 0)
-        screen.line(i * 12.19 + 12.19 + 12.19 + 6.095, 27)
-        screen.line(i * 12.19 + 12.19 + 12.19 + 12.19 + 6.095, 27)
-        screen.line(i * 12.19 + 12.19 + 12.19 + 12.19 + 6.095, 0)             
-        
-      end
-      end
-    end
-      
-  screen.font_size(12)
+  screen.move(.083 * total_keyboard_width, 0)
+  screen.line(.083 * total_keyboard_width, black_key_length)
+  screen.line(2 * .083 * total_keyboard_width, black_key_length)
+  screen.line(2 * .083 * total_keyboard_width, 0)
+  
+  screen.move(3 * .083 * total_keyboard_width, 0)
+  screen.line(3 * .083 * total_keyboard_width, black_key_length)
+  screen.line(4 * .083 * total_keyboard_width, black_key_length)
+  screen.line(4 * .083 * total_keyboard_width, 0)
+  
+  screen.move(6 * .083 * total_keyboard_width, 0)
+  screen.line(6 * .083 * total_keyboard_width, black_key_length)
+  screen.line(7 * .083 * total_keyboard_width, black_key_length)
+  screen.line(7 * .083 * total_keyboard_width, 0)
+  
+  screen.move(8 * .083 * total_keyboard_width, 0)
+  screen.line(8 * .083 * total_keyboard_width, black_key_length)
+  screen.line(9 * .083 * total_keyboard_width, black_key_length)
+  screen.line(9 * .083 * total_keyboard_width, 0)
+  
+  screen.move(10 * .083 * total_keyboard_width, 0)
+  screen.line(10 * .083 * total_keyboard_width, black_key_length)
+  screen.line(11 * .083 * total_keyboard_width, black_key_length)
+  screen.line(11 * .083 * total_keyboard_width, 0)
+  
+  --white keys as a percentage of the whole keyboard: 0.1424
+
+  screen.move(1.5 * .083 * total_keyboard_width, black_key_length)
+  screen.line(1.5 * .083 * total_keyboard_width, total_keyboard_height)
+  screen.move(3.5 * .083 * total_keyboard_width, black_key_length)
+  screen.line(3.5 * .083 * total_keyboard_width, total_keyboard_height)
+  screen.move(6.5 * .083 * total_keyboard_width, black_key_length)
+  screen.line(6.5 * .083 * total_keyboard_width, total_keyboard_height)
+  screen.move(8.5 * .083 * total_keyboard_width, black_key_length)
+  screen.line(8.5 * .083 * total_keyboard_width, total_keyboard_height)    
+  screen.move(10.5 * .083 * total_keyboard_width, black_key_length)
+  screen.line(10.5 * .083 * total_keyboard_width, total_keyboard_height)
+  
+  screen.move(5 * .083 * total_keyboard_width, 0)
+  screen.line(5 * .083 * total_keyboard_width, total_keyboard_height)
+  
+  --draw the second piano
+  --black keys
+  
+  screen.move(.083 * total_keyboard_width, 63 - total_keyboard_height)
+
+  screen.line(.083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(2 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(2 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+
+  screen.move(3 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+  screen.line(3 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(4 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(4 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+
+  screen.move(6 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+  screen.line(6 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(7 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(7 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+
+  screen.move(8 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+  screen.line(8 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(9 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(9 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+
+  screen.move(10 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+  screen.line(10 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(11 * .083 * total_keyboard_width, 63 - total_keyboard_height + black_key_length)
+  screen.line(11 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+
+--white keys
+  
+  screen.move(1.5 * .083 * total_keyboard_width,  63 - total_keyboard_height + black_key_length)
+  screen.line(1.5 * .083 * total_keyboard_width, 63)
+  screen.move(3.5 * .083 * total_keyboard_width,  63 - total_keyboard_height + black_key_length)
+  screen.line(3.5 * .083 * total_keyboard_width, 63)
+  screen.move(6.5 * .083 * total_keyboard_width,  63 - total_keyboard_height + black_key_length)
+  screen.line(6.5 * .083 * total_keyboard_width, 63)
+  screen.move(8.5 * .083 * total_keyboard_width,  63 - total_keyboard_height + black_key_length)
+  screen.line(8.5 * .083 * total_keyboard_width, 63)    
+  screen.move(10.5 * .083 * total_keyboard_width,  63 - total_keyboard_height + black_key_length)
+  screen.line(10.5 * .083 * total_keyboard_width, 63)  
+
+  screen.move(5 * .083 * total_keyboard_width, 63 - total_keyboard_height)
+  screen.line(5 * .083 * total_keyboard_width, 63)  
+  
+  --draw the outlines of the pianos!
+  
+  screen.move(0,1)
+  screen.line(0,total_keyboard_height)
+  screen.move(total_keyboard_width,1)
+  screen.line(total_keyboard_width,total_keyboard_height)
+  screen.move(total_keyboard_width, 63 - total_keyboard_height)
+  screen.line(total_keyboard_width, 63)
+  screen.move(0, 63 - total_keyboard_height)
+  screen.line(0, 63)
+  screen.move (0, total_keyboard_height)
+  screen.line(total_keyboard_width, total_keyboard_height)
+  screen.move(0, 63 - total_keyboard_height)
+  screen.line(total_keyboard_width, 63 - total_keyboard_height)
+  screen.move(0,1)
+  screen.line(total_keyboard_width,1)
+  screen.move(0,63)
+  screen.line(total_keyboard_width,63)
+
+    screen.font_size(12)
   
   for i = 0,6 do
-    if black_keys[current_pitch_collection[i]] then
-    screen.move(black_keys[current_pitch_collection[i]], 22)
+     if black_keys[current_pitch_collection[i]] then
+     screen.move(black_keys[current_pitch_collection[i]], total_keyboard_height / 1.6)
+     screen.text("+")
+  end 
+    if white_keys[current_pitch_collection[i]] then
+    screen.move(white_keys[current_pitch_collection[i]], total_keyboard_height / 1.1 )
+    screen.text("+")
+    end
+  end
+    
+  for i = 0,6 do
+    if black_keys[next_pitch_collection[i]] then
+    screen.move(black_keys[next_pitch_collection[i]], total_keyboard_height / 1.6 + 63 - total_keyboard_height)
     screen.text("+")
     end 
-    if white_keys[current_pitch_collection[i]] then
-    screen.move(white_keys[current_pitch_collection[i]], 40)
+    if white_keys[next_pitch_collection[i]] then
+    screen.move(white_keys[next_pitch_collection[i]], total_keyboard_height / 1.1 + 63 - total_keyboard_height)
     screen.text("+")
     end
     
   end
   
-  screen.font_size(22)
-  screen.move(32, 62)
-  screen.text(note_names[new_root])
-  screen.move(72, 62)
-  screen.text(note_names[one_note])
-  screen.move(92, 62)
-  screen.text(note_names[a_different_note])
-  
-    screen.stroke()
+  screen.move(total_keyboard_width + 3, 9)
+  screen.text(note_names[current_root])
+  screen.move(total_keyboard_width + 3, 63)
+  screen.text(note_names[next_root])
+  screen.move(total_keyboard_width + 3, 36)
+  screen.text(note_names[half_of_gateway])
+  screen.move(total_keyboard_width + 19, 36)
+  screen.text(note_names[other_half_of_gateway])  
+  screen.stroke()
   screen.update()
-end
 
-black_keys = {}
-black_keys[1] = 14.285
-black_keys[3] = 32.57
-black_keys[6] = 69.14
-black_keys[8] = 87.425
-black_keys[10] = 105.71
-
-
-white_keys = {}
-white_keys[0] = 6.1425
-white_keys[2] = 24.4275
-white_keys[4] = 42.7125
-white_keys[5] = 60.9975
-white_keys[7] = 79.2825
-white_keys[9] = 97.5675
-white_keys[11] = 115.8525
-
-function tablelength(T)
-  local count = 0
-  for _ in pairs(T) do count = count + 1 end
-  return count
 end
